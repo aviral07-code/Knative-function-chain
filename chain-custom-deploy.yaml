@@ -1,0 +1,73 @@
+---
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: func-c-custom
+  namespace: default
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/class: "kpa.autoscaling.knative.dev"
+        autoscaling.knative.dev/metric: "concurrency"
+        autoscaling.knative.dev/target: "20"
+        autoscaling.knative.dev/min-scale: "1"
+        autoscaling.knative.dev/max-scale: "50"
+    spec:
+      containers:
+      - image: docker.io/aviralgarg007/function-c:v1
+        env:
+        - name: WORK_MS
+          value: "100"
+        ports:
+        - containerPort: 8080
+---
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: func-b-custom
+  namespace: default
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/class: "kpa.autoscaling.knative.dev"
+        autoscaling.knative.dev/metric: "concurrency"
+        autoscaling.knative.dev/target: "30"
+        autoscaling.knative.dev/min-scale: "1"
+        autoscaling.knative.dev/max-scale: "50"
+    spec:
+      containers:
+      - image: docker.io/aviralgarg007/function-b:v1
+        env:
+        - name: NEXT_FUNCTION
+          value: "http://func-c-custom.default.svc.cluster.local"
+        - name: WORK_MS
+          value: "100"
+        ports:
+        - containerPort: 8080
+---
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: func-a-custom
+  namespace: default
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/class: "kpa.autoscaling.knative.dev"
+        autoscaling.knative.dev/metric: "concurrency"
+        autoscaling.knative.dev/target: "50"
+        autoscaling.knative.dev/min-scale: "1"
+        autoscaling.knative.dev/max-scale: "50"
+    spec:
+      containers:
+      - image: docker.io/aviralgarg007/function-a:v1
+        env:
+        - name: NEXT_FUNCTION
+          value: "http://func-b-custom.default.svc.cluster.local"
+        - name: WORK_MS
+          value: "100"
+        ports:
+        - containerPort: 8080
